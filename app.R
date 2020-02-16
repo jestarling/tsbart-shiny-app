@@ -60,7 +60,7 @@ ui <- fluidPage(theme = shinytheme("flatly"),
          awesomeCheckboxGroup(
             inputId = "med",
             label = "Medical Hx", 
-            choices = c("Diabetes", "Hypertension", "Other risk factors*")
+            choices = c("Diabetes", "Hypertension", "Other risk factors")
          ),
          
          
@@ -133,33 +133,44 @@ ui <- fluidPage(theme = shinytheme("flatly"),
                      
                      fluidRow(
                         plotOutput("stillbirth_change_plot", height=300, width=500)
-                     ),
-                     
-                     fluidRow(
-                        helpText("* Other risk factors include any of the following:  anemia,
-                                 cardiac disease, lung disease, diabetes mellitus, renal disease, or Rh sensitization.
-                                 Pregnancy complications (gestational diabetes, abruption, preeclampsia)
-                                 are excluded.")
-                        )       
-                     
-                     
-                     #,
-                     
-                     #sliderInput("gestage", "Gestational age (w)", min = 34, max = 42, value=39, step=1)
+                     )
             ), 
             
             # Table tab.
-            tabPanel("Table", 
+            tabPanel("Data", 
                      
                      fluidPage(
                         tableOutput("table")
-                     ),
+                     )      
+            ), 
+            tabPanel("Reference", 
                      
                      fluidRow(
-                        helpText("* Other risk factors include any of the following:  anemia,
+                        helpText("The tsBART method used in this analysis is by Starling et al. The following reference should be cited.")
+                        ), 
+                     
+                     fluidRow(
+                        helpText("
+Jennifer E. Starling, Jared S. Murray, Carlos M. Carvalho, Radek Bukowski, James G. Scott. BART with Targeted Smoothing: an analysis of patient-specific stillbirth risk. In press, Annals of Applied Statistics, 2019.")
+                     ), 
+                     
+                     fluidRow(
+                        helpText("The R package tsbart implements the BART with Targeted Smoothing method, and is available
+                                 at https://github.com/jestarling/tsbart.")
+                        ),  
+                     
+                     fluidRow(
+                        helpText("This application predicts stillbirth risk using features of the maternal-fetal dyad. It runs using
+                                 on data derived from analysis of publicly available Electronic Health Record data.  More information on
+                                 data source and replicating the analysis is available at https://github.com/jestarling/tsbart-analysis.")
+                        ),
+
+                     
+                     fluidRow(
+                        helpText("Medical Hx Input: Other risk factors include any of the following:  anemia,
                                  cardiac disease, lung disease, diabetes mellitus, renal disease, or Rh sensitization.
-                                 Pregnancy complications (gestational diabetes, abruption, preeclampsia)
-                                 are excluded.")
+                                 Pregnancy complications, such as gestational diabetes, abruption, preeclampsia,
+                                 are excluded (consistent with Mandujano et al. 2013).")
                         )        
                      
                      

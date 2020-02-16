@@ -5,8 +5,8 @@ account: jestarling
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 1817523
-bundleId: 2803548
+bundleId: 2804734
 url: https://jestarling.shinyapps.io/stillbirth-risk-with-tsbart/
-when: 1581806645.42298
+when: 1581881431.9714
 asMultiple: FALSE
 asStatic: FALSE
