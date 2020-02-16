@@ -146,34 +146,37 @@ ui <- fluidPage(theme = shinytheme("flatly"),
             tabPanel("Reference", 
                      
                      fluidRow(
-                        helpText("The tsBART method used in this analysis is by Starling et al. The following reference should be cited.")
-                        ), 
+                        p("The",strong("tsBART")," method used in this analysis is by Starling et al. The following reference should be cited:")
+                     ),
+            
                      
                      fluidRow(
-                        helpText("
-Jennifer E. Starling, Jared S. Murray, Carlos M. Carvalho, Radek Bukowski, James G. Scott. BART with Targeted Smoothing: an analysis of patient-specific stillbirth risk. In press, Annals of Applied Statistics, 2019.")
+                        p("Jennifer E. Starling, Jared S. Murray, Carlos M. Carvalho, Radek Bukowski, James G. Scott.", 
+                          em("BART with Targeted Smoothing: an analysis of patient-specific stillbirth risk."), 
+                          "In press, Annals of Applied Statistics, 2020.")
                      ), 
                      
                      fluidRow(
-                        helpText("The R package tsbart implements the BART with Targeted Smoothing method, and is available
-                                 at https://github.com/jestarling/tsbart.")
+                        p("The R package tsbart implements the BART with Targeted Smoothing method, and is available
+                                 at", tags$a(href="https://github.com/jestarling/tsbart", "https://github.com/jestarling/tsbart"),".")
                         ),  
                      
                      fluidRow(
-                        helpText("This application predicts stillbirth risk using features of the maternal-fetal dyad. It runs using
+                        p("This application predicts stillbirth risk using features of the maternal-fetal dyad. It runs using
                                  on data derived from analysis of publicly available Electronic Health Record data.  More information on
-                                 data source and replicating the analysis is available at https://github.com/jestarling/tsbart-analysis.")
+                                 data source and replicating the analysis is available at",
+                          tags$a(href="https://github.com/jestarling/tsbart-analysis", "https://github.com/jestarling/tsbart-analysis"),".")
                         ),
 
                      
                      fluidRow(
-                        helpText("Medical Hx Input: Other risk factors include any of the following:  anemia,
+                        p(strong("Medical Hx Input:"),"Other risk factors include any of the following:  anemia,
                                  cardiac disease, lung disease, diabetes mellitus, renal disease, or Rh sensitization.
                                  Pregnancy complications, such as gestational diabetes, abruption, preeclampsia,
-                                 are excluded (consistent with Mandujano et al. 2013).")
+                                 are excluded (consistent with",
+                          tags$a(href="https://www.ajog.org/article/S0002-9378(12)02200-4/fulltext", 
+                                 "Mandujano et al. 2013"),".")
                         )        
-                     
-                     
             ) 
             
          ) # End tabsetPanel
