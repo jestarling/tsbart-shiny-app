@@ -1,0 +1,321 @@
+---
+title: "Predicting stillbirth risk with tsBART"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: rows
+    vertical_layout: fill
+    social: menu
+    source_code: https://github.com/jestarling/tsbart-shiny-app
+    theme:
+      version: 4
+      bootswatch: lumen
+runtime: shiny
+---
+
+<!-- Learn more about flexdashboard at https://rstudio.github.io/flexdashboard -->
+
+
+```{r setup, include=FALSE}
+### GLOBAL CODE CHUNK
+library(shiny)
+library(tidyverse)
+library(leaflet)
+library(data.table)
+
+library(shinyWidgets)
+library(kableExtra)
+library(shinythemes)
+library(ggthemes)
+library(plotly)
+library(cowplot)
+library(ggpubr)
+
+chooseSliderSkin(skin='Modern')
+
+# Read data.
+data <- as.data.frame(fread("./data/tsbart-shiny-data.csv", stringsAsFactors = F)) %>%
+   filter(induce==0) %>%
+   mutate(phat_adj = phat_adj * 10,
+          phat_lb_adj = phat_lb_adj * 10,
+          phat_ub_adj = phat_ub_adj * 10,
+          phat_wk_chg = phat_wk_chg * 10)
+
+### Define reactive function to get data for a single patient.
+patient <- reactive({
+   
+   # Grab input parameters.
+   pars <- input
+   
+   # Subset and tidy data for a single patient.
+   subset <- tidy_patient(data, pars)
+   return(subset)
+})
+
+### Define reactive function to get data for a set of similar patients.
+similarpatients <- reactive({
+   
+   # Grab input parameters.
+   pars <- input
+   
+   # Subset and tidy data for a single patient.
+   subset <- tidy_similar_patients(data, pars)
+   return(subset)
+})
+
+# Source utility functions.
+source("./r-scripts/data-utils.R")
+source("./r-scripts/plot-utils.R")
+source("./r-scripts/table-utils.R")
+```
+
+
+Inputs {.sidebar data-width=260}
+======================================================================
+
+🌀 **Pregnancy Inputs:**
+
+```{r}
+tags$br()
+
+div(style = "margin-top: -30px")
+
+# Gestational age.
+sliderTextInput("gestage", "Gestational age (GA, wks)", 
+                grid = TRUE,
+                force_edges = TRUE,
+                hide_min_max = TRUE,
+                choices = 34:42,
+                selected = 39)
+
+# Weight gain quantile.
+sliderTextInput(inputId = "wtgainQ", 
+                label = "Maternal weight gain quantile at GA", 
+                grid = TRUE,
+                force_edges = TRUE,
+                hide_min_max = TRUE,
+                choices = c("Very low [0,0.1)", "Low [0.1,0.25)", "Moderate [0.25,0.75)", "High [0.75,0.9)", "Very high [0.9,1]"),
+                selected = "Moderate [0.25,0.75)")
+         
+# Birth weight quantile.
+sliderTextInput(inputId = "birthwtQ", 
+                label = "Fetal weight quantile in utero at GA", 
+                grid = TRUE, 
+                force_edges = TRUE,
+                hide_min_max = TRUE,
+                choices = c("Very low [0,0.1)", "Low [0.1,0.25)", "Moderate [0.25,0.75)", "High [0.75,0.9)", "Very high [0.9,1]"),
+                selected = "Moderate [0.25,0.75)")
+```
+******
+🌀 **Maternal-Fetal Dyad Inputs:**
+
+```{r}
+tags$br()
+
+div(style = "margin-top: -30px")
+
+# Mom age
+sliderTextInput(inputId = "agegrp", 
+                label = "Maternal age (years)", 
+                grid = FALSE, 
+                force_edges = FALSE,
+                choices = c("<20", "20-24", "25-29", "30-34", "35-39", "40-44", "45+"),
+                selected = "25-29")
+               
+# Diabetes, HTN, other risk factors.
+awesomeCheckboxGroup(inputId = "med",
+                     label = "Medical History", 
+                     choices = c("Diabetes", "Hypertension", "Other risk factors"))
+         
+# Ethnicity.
+awesomeRadio(inputId = "eth",
+             label = "Maternal race/ethnicity", 
+             choices = c("Black (non-Hispanic)", "Hispanic", "Other", "White (non-Hispanic)"),
+             selected = "White (non-Hispanic)")
+         
+# Parity.
+materialSwitch(inputId = "multiparous",
+               label = "Multiparous", 
+               value = 0,
+               status = "info")
+
+# Infant sex
+materialSwitch(inputId = "male",
+               label = "Female infant", 
+               value = 0,
+               status = "info")
+```
+
+******
+Author: [https://github.com/jestarling](J.E. Starling)
+
+Data source: Anonymized birth data from the National Center
+for Health Statistics from the years 2004 and 2005.
+
+
+Explore risk
+======================================================================
+
+Row
+-----------------------------------------------------------------------
+
+### Risk of stillbirth across gestational age
+
+```{r}
+# Draw the main stillbirth risk prediction plot.
+output$stillbirth_risk_plot <- renderPlot({
+   
+   # Grab data and input parameters.   
+   ggdf <- patient()
+   pars <- input
+   
+   # Make plot.
+   plt <- make_stillbirth_plot(ggdf, pars)
+   print(plt)
+})
+
+plotOutput("stillbirth_risk_plot", width= "80%") 
+```
+
+Row 
+-----------------------------------------------------------------------
+
+### Percent change in risk from prior week
+
+```{r}
+output$stillbirth_change_plot<- renderPlot({
+      
+   # Grab data and input parameters.   
+   ggdf <- patient()
+   pars <- input
+   
+   # Make plot.
+   plt <- make_change_plot(ggdf, pars)
+   print(plt)   
+})
+
+plotOutput("stillbirth_change_plot", width = "80%") 
+```
+
+### Risk data
+
+```{r, eval = TRUE}
+output$table <- function() {
+
+      # Subset data based on inputs.
+      subset = patient()
+
+      # Make table.
+      printtab = make_risk_table(subset)
+      
+      # Print table.
+      printtab %>%
+         knitr::kable(format = "html", align = 'lccc') %>%
+         kable_styling("striped", full_width = F) %>%
+         row_spec(which(printtab[,"Week"] == as.numeric(input$gestage)), bold = T, color='dodgerblue4') %>%
+         column_spec(1, width = "3em") %>%
+         column_spec(2, width = "10em") %>%
+         column_spec(3, width = "10em") %>%
+         row_spec(1:9, extra_css = "padding: 0px")
+}
+
+tableOutput("table")
+```
+
+Compare risk
+============================================================================
+
+Row
+----------------------------------------------------------------------------
+
+### Stillbirth risk curves by maternal weight gain and fetal weight.
+
+```{r, eval = TRUE}
+# Here, we draw the main stillbirth risk prediction plot.
+output$compare_plot <- renderPlot({
+   
+   # Grab data and input parameters.   
+   ggdf <- patient()
+   ggdf_similar <- similarpatients() 
+   pars <- input
+   
+   # Make plot.
+   plt <- make_compare_plot(ggdf, ggdf_similar, pars)
+   print(plt)
+})
+
+plotOutput("compare_plot", width= "80%") 
+```
+
+Methods
+============================================================================
+
+**Data source.** 
+
+This application predicts stillbirth risk using features of the maternal-fetal dyad. It runs using on data derived from analysis of publicly available Electronic Health Record data from the National Center for Health Statistics from the years 2004 and 2005. 
+
+The dataset used to produce estimates in this application consists of 8,371,461 pregnancies with 7,940,495 live births, 100,072 still-
+births and 330,894 cases where stillbirth outcome is missing. We restricted our analysis to complete cases with all maternal-fetal information and stillbirth response present, limited to pregnancies delivered from 34 to 42 weeks inclusive. These restrictions yield 4,553,868 pregnancies for analysis, of which 7,175 are stillbirths, for an overall prevalence of 1.58 stillbirths per thousand pregnancies from 34 to 42 weeks’ gestation. The prevalence in the high risk category was 2.85 stillbirths per thousand, while the prevalence in the low risk group was 1.45 per thousand. Prevalence is comparable to the dataset analyzed by Mandujano, Waters and Myers (2013), where overall prevalence was 1.45 births per thousand, 2.68 in the high risk group and 1.34 in the low risk group.
+
+More information on data source and replicating the analysis is available at [https://github.com/jestarling/tsbart-analysis](https://github.com/jestarling/tsbart-analysis).
+
+**Definitions.**
+
+- **Gestational age (wks):** Ranges from 34 to 42 weeks, representing the range where cliniciants might plausibly recommend to deliver a baby based on elevated stillbirth risk, barring exceptional circumstances.
+- **Maternal weight gain:** Pregnancy weight gain quantile.
+- **Fetal weight in utero:** Estimated quantile using ultrasound and fetal growth charts. 
+- **Diabetes:** Select this checkbox to indicate diabetes mellitus; excludes gestational diabetes.
+- **Hypertension:** Select this checkbox to indicate chronic hypertension; excludes pregnancy-related hypertension.
+- **Other risk factors:** Select this checkbox to indicate presence of one or more conditions including anemia, cardiac disease, lung disease, hemoglobinopathy and Rh sensitization. Excludes pregnancy-related complications such as abruption or pre-eclampsia. [Mandujano et al. 2013](https://www.ajog.org/article/S0002-9378(12)02200-4/fulltext)
+- **CI:** Credible interval. Because tsBART is a Bayesian model, uncertainty intervals represent credible intervals instead of confidence intervals. The unobserved risk falls within the inveral with 95% certainty.
+
+                                 
+                                 
+About
+============================================================================
+
+**Purpose.** This application lets users interactively explore patient-specific stillbirth risk estimates, across gestational age and based on maternal and fetal risk factors. It supports the article [BART with Targeted Smoothing: an analysis of patient-specific stillbirth risk (Starling et al. 2020)](http://dx.doi.org/10.1214/19-AOAS1268).
+
+**tsBART Model.** The article introduces BART with Targeted Smoothing, or tsBART, a new Bayesian tree-based model for nonparametric regression. The goal of tsBART is to introduce smoothness over a single target covariate while not necessarily requiring smoothness over other covariates. tsBART is based on the Bayesian Additive Regression Trees (BART) model, an ensemble of regression trees. tsBART extends BART by parameterizing each tree’s terminal nodes with smooth functions of  rather than independent scalars. Like BART, tsBART captures complex nonlinear relationships and interactions among the predictors. But unlike BART, tsBART guarantees that the response surface will be smooth in the target covariate. This improves interpretability and helps to regularize the estimate.
+
+The article's motivating example uses pregnancy outcomes data from the National Center for Health Statistics. Obstetricians expect stillbirth risk to vary smoothly over gestational age but not necessarily over other covariates, and tsBART has been designed to reflect this structural knowledge, providing patients and doctors with better information for managing the risk of stillbirth.  
+
+**Citation.** This work may be cited as
+
+*Jennifer E. Starling. Jared S. Murray. Carlos M. Carvalho. Radek K. Bukowski. James G. Scott. "BART with targeted smoothing: An analysis of patient-specific stillbirth risk." Ann. Appl. Stat. 14 (1) 28 - 50, March 2020. https://doi.org/10.1214/19-AOAS1268*
+
+**R package. ** The R package tsbart implements the BART with Targeted Smoothing method, and is available at [https://github.com/jestarling/tsbart](https://github.com/jestarling/tsbart).
+
+
+**Development.** The application is built with the [Shiny](http://shiny.rstudio.com) framework for the [R programming language](https://www.r-project.org/). The application layout is produced with the [flexdashboard](http://rstudio.github.io/flexdashboard/index.html) package, and the plots use [ggplot2](http://ggplot2.org/), all accessed through their corresponding R packages.  Code for the application is available at <https://github.com/jestarling/tsbart-shiny-app>.  
+
+To learn more about my work, [visit my GitHub](https://github.com/jestarling) or [connect with me on LinkedIn](https://www.linkedin.com/in/jennifer-starling-a4447b194/).  
+
+
+
+<style>
+
+#sidebar.section.sidebar {
+
+  background-color: white; 
+  font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif !important;
+
+}
+
+.js-irs-0 .irs-bar {
+border-top-color: #d01010;
+border-bottom-color: #d01010;
+} 
+
+.js-irs-0 .irs-bar-edge {
+border-color: #d01010;
+}
+
+.js-irs-0 .irs-single, .js-irs-0 .irs-bar-edge, .js-irs-0 .irs-bar {
+background: #a00;
+}
+
+</style>
+
+
+
+
