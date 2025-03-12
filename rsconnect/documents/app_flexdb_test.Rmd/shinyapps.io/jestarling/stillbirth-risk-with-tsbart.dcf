@@ -1,0 +1,12 @@
+name: stillbirth-risk-with-tsbart
+title: stillbirth-risk-with-tsbart
+username: jestarling
+account: jestarling
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 1817523
+bundleId:
+url: https://jestarling.shinyapps.io/stillbirth-risk-with-tsbart/
+version: 1
+asMultiple: FALSE
+asStatic: FALSE

@@ -1,5 +1,5 @@
 ---
-title: "Predicting stillbirth risk with tsBART"
+title: "Predicting patient-specific stillbirth risk with tsBART"
 output: 
   flexdashboard::flex_dashboard:
     orientation: rows
@@ -69,10 +69,10 @@ source("./r-scripts/table-utils.R")
 ```
 
 
-Inputs {.sidebar data-width=260}
+Inputs {.sidebar data-width=260} 
 ======================================================================
 
-🌀 **Pregnancy Inputs:**
+**Pregnancy Inputs:**
 
 ```{r}
 tags$br()
@@ -106,7 +106,7 @@ sliderTextInput(inputId = "birthwtQ",
                 selected = "Moderate [0.25,0.75)")
 ```
 ******
-🌀 **Maternal-Fetal Dyad Inputs:**
+**Maternal-Fetal Dyad Inputs:**
 
 ```{r}
 tags$br()
@@ -294,6 +294,44 @@ To learn more about my work, [visit my GitHub](https://github.com/jestarling) or
 
 <style>
 
+.section.sidebar {
+  top: 60px;
+  background-color: rgb(227, 227, 225);
+}
+
+.value-box {
+  color: inherit;
+}
+
+.bg-primary {
+  background-color: rgb(242, 242, 242);
+}
+
+.nav-tabs-custom > .nav-tabs > li.active {
+  border-top-color: transparent;
+}
+
+.nav-tabs-custom > .nav-tabs > li > a:hover,
+.nav-tabs-custom > .nav-tabs > li > a:focus:hover {
+  background-color: transparent;
+  -webkit-box-shadow: inset 0 -2px 0 rgba(33, 150, 243, 0.7);
+  box-shadow: inset 0 -2px 0 rgba(33, 150, 243, 0.7);
+  color: rgba(33, 150, 243, 0.7);
+}
+.nav-tabs-custom > .nav-tabs > li.active > a,
+.nav-tabs-custom > .nav-tabs > li.active > a:focus {
+  border: none;
+  -webkit-box-shadow: inset 0 -2px 0 rgba(33, 150, 243, 0.7);
+  box-shadow: inset 0 -2px 0 rgba(33, 150, 243, 0.7);
+  /*color: rgba(33, 150, 243, 0.7);*/
+}
+.nav-tabs-custom > .nav-tabs > li.active > a:hover,
+.nav-tabs-custom > .nav-tabs > li.active > a:focus:hover {
+  border: none;
+  /*color: rgba(33, 150, 243, 0.7);*/
+}
+
+
 #sidebar.section.sidebar {
 
   background-color: white; 
@@ -302,16 +340,23 @@ To learn more about my work, [visit my GitHub](https://github.com/jestarling) or
 }
 
 .js-irs-0 .irs-bar {
-border-top-color: #d01010;
-border-bottom-color: #d01010;
+border-top-color: rgb(45, 43, 46);
+border-bottom-color: rgb(45, 43, 46);
 } 
 
 .js-irs-0 .irs-bar-edge {
-border-color: #d01010;
+border-color: rgb(45, 43, 46);
+background: rgb(45, 43, 46);
 }
 
-.js-irs-0 .irs-single, .js-irs-0 .irs-bar-edge, .js-irs-0 .irs-bar {
-background: #a00;
+.js-irs-1 .irs-bar, .js-irs-1 {
+border-top-color: rgb(45, 43, 46);
+border-bottom-color: rgb(45, 43, 46);
+} 
+
+.js-irs-1 .irs-modern .irs-bar-edge {
+border-color: rgb(45, 43, 46);
+background: rgb(45, 43, 46);
 }
 
 </style>
